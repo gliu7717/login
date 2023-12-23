@@ -21,6 +21,7 @@ import com.example.login.databinding.ActivitySignUpBinding
 import com.example.login.models.GeneralResponse
 import com.example.login.utils.MySharedPreference
 import com.example.login.utils.Utility
+import com.example.login.utils.VolleyUtility
 import com.google.gson.Gson
 import java.io.ByteArrayOutputStream
 import java.net.URLEncoder
@@ -59,44 +60,26 @@ class SignUpActivity : AppCompatActivity() {
         Toast.makeText(applicationContext,message, Toast.LENGTH_LONG).show()
     }
 
-    private fun signUp()
-    {
+    private fun signUp() {
         loading(true)
         binding.btnSignUp.isEnabled = false
-        val queue = Volley.newRequestQueue(this)
         val url = mySharedPreference.getAPIURL(this) + "/registration"
         val requestBody =
-                    "name=" + binding.etInputName.text +
+            "name=" + binding.etInputName.text +
                     "&email=" + binding.etInputEmail.text +
                     "&password=" + binding.etInputPassword.text +
                     "&password1=" + binding.etInputConfirmPassword.text
+        VolleyUtility.volleyRequest(this,url, requestBody) { response: String ->
+            volleyCallBack(
+                response
+            )
+        }
+    }
 
-        val stringReq: StringRequest =
-            object : StringRequest(
-                Method.POST, url,
-                Response.Listener { response ->
-                    binding.btnSignUp.isEnabled = true
-                    loading(false)
-                    val generalResponse = Gson().fromJson(response, GeneralResponse::class.java)
-                    if (generalResponse.status == "success") {
-                        Utility.showAlert(
-                            this,
-                            "Registered",
-                            generalResponse.message
-                        )
-                    } else {
-                        Utility.showAlert(this, "Error", generalResponse.message)
-                    }
-                },
-                Response.ErrorListener { error ->
-                    Log.i("myLog", "error = " + error)
-                }
-            ) {
-                override fun getBody(): ByteArray {
-                    return requestBody.toByteArray(Charset.defaultCharset())
-                }
-            }
-        queue.add(stringReq)
+    private fun volleyCallBack(response:String)
+    {
+        binding.btnSignUp.isEnabled = true
+        loading(false)
     }
 
     private fun encodeImage(bitmap: Bitmap) :String
@@ -129,10 +112,11 @@ class SignUpActivity : AppCompatActivity() {
 
     private fun isValidSignUpDetail() : Boolean
     {
-        if(encodedImage == null){
-            showToast("Select Profile Image.")
-            return false;
-        }else if(binding.etInputName.text.toString().trim().isEmpty()){
+//        if(encodedImage == null){
+//            showToast("Select Profile Image.")
+//            return false;
+//        }else if(binding.etInputName.text.toString().trim().isEmpty()){
+        if(binding.etInputName.text.toString().trim().isEmpty()){
             showToast("Enter Name")
             return false;
         } else if(binding.etInputEmail.text.toString().trim().isEmpty()){
